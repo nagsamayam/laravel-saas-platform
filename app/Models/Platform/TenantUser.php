@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Models\Platform;
 
 use App\Enums\TenantMembershipStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TenantUser extends Model
@@ -32,8 +34,6 @@ class TenantUser extends Model
         return [
             'status' => TenantMembershipStatus::class,
             'deleted_at' => 'datetime',
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
         ];
     }
 
@@ -45,5 +45,28 @@ class TenantUser extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Role::class,
+            'tenant_user_roles',
+            'tenant_user_id',
+            'role_id'
+        );
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where(
+            'status',
+            TenantMembershipStatus::ACTIVE->value
+        );
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === TenantMembershipStatus::ACTIVE;
     }
 }

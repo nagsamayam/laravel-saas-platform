@@ -1,15 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Platform;
 
 use App\Enums\UserStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Model
+class User extends Authenticatable
 {
     use HasFactory;
     use HasUuids;
@@ -40,23 +45,46 @@ class User extends Model
             'status' => UserStatus::class,
             'email_verified_at' => 'datetime',
             'deleted_at' => 'datetime',
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
         ];
     }
 
-    public function tenantMemberships()
+    public function tenantMemberships(): HasMany
     {
         return $this->hasMany(TenantUser::class, 'user_id');
     }
 
-    public function tenants()
+    public function tenants(): BelongsToMany
     {
         return $this->belongsToMany(
             Tenant::class,
             'tenant_users',
             'user_id',
             'tenant_id'
-        )->wherePivotNull('deleted_at');
+        )
+            ->wherePivotNull('deleted_at')
+            ->withPivot([
+                'id',
+                'status',
+            ]);
+    }
+
+    public function platformRoles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Role::class,
+            'user_roles',
+            'user_id',
+            'role_id'
+        );
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', UserStatus::ACTIVE->value);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === UserStatus::ACTIVE;
     }
 }
