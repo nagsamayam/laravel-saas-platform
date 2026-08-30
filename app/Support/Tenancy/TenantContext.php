@@ -45,7 +45,15 @@ final class TenantContext
 
     public function schema(): string
     {
-        return $this->get()->schema_name;
+        $schema = $this->get()->schema_name;
+
+        if (! is_string($schema) || $schema === '') {
+            throw new LogicException(
+                'Tenant context contains a tenant without a schema.'
+            );
+        }
+
+        return $schema;
     }
 
     public function hasTenant(): bool

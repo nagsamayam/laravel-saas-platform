@@ -8,6 +8,7 @@ use App\Enums\TenantStatus;
 use App\Support\Audit\HasAuditFields;
 use App\Support\Concurrency\HasOptimisticLock;
 use App\Support\Concurrency\OptimisticLockable;
+use App\Support\Tenancy\TenantSchema;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,8 +35,17 @@ class Tenant extends Model implements OptimisticLockable
         'name',
         'slug',
         'status',
-        'schema_name',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $tenant): void {
+            if ($tenant->schema_name === null) {
+                $tenant->schema_name = app(TenantSchema::class)
+                    ->fromSlug($tenant->slug);
+            }
+        });
+    }
 
     protected function casts(): array
     {
@@ -71,7 +81,10 @@ class Tenant extends Model implements OptimisticLockable
 
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('status', TenantStatus::ACTIVE->value);
+        return $query->where(
+            'status',
+            TenantStatus::ACTIVE->value
+        );
     }
 
     public function scopeProvisionable(Builder $query): Builder
