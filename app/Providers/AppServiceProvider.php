@@ -13,19 +13,19 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(
+        $this->app->scoped(
             TenantContext::class,
             static fn (): TenantContext => new TenantContext
-        );
-
-        $this->app->bind(
-            TenantResolver::class,
-            static fn (): TenantResolver => new TenantResolver
         );
 
         $this->app->scoped(
             TenantDatabaseManager::class,
             static fn (): TenantDatabaseManager => new TenantDatabaseManager
+        );
+
+        $this->app->bind(
+            TenantResolver::class,
+            static fn (): TenantResolver => new TenantResolver
         );
     }
 
