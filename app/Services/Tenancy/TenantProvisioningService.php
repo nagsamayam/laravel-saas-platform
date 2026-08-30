@@ -6,6 +6,7 @@ namespace App\Services\Tenancy;
 
 use App\Enums\TenantStatus;
 use App\Models\Platform\Tenant;
+use App\Support\Concurrency\OptimisticLockException;
 use App\Support\Tenancy\TenantMigrationRunnerContract;
 use RuntimeException;
 use Throwable;
@@ -18,13 +19,15 @@ final class TenantProvisioningService
 
     public function provision(Tenant $tenant): Tenant
     {
-        $this->validateTenant($tenant);
-
         if ($tenant->status === TenantStatus::ACTIVE) {
             return $tenant;
         }
 
-        $this->markProvisioning($tenant);
+        $this->validateTenant($tenant);
+
+        if (! $this->claimProvisioning($tenant)) {
+            return $tenant->fresh();
+        }
 
         try {
             $this->migrationRunner->run(
@@ -55,11 +58,7 @@ final class TenantProvisioningService
             );
         }
 
-        if (
-            ! $tenant->status->isProvisionable()
-            && $tenant->status !== TenantStatus::PROVISIONING
-            && $tenant->status !== TenantStatus::ACTIVE
-        ) {
+        if (! $tenant->status->isProvisionable()) {
             throw new RuntimeException(
                 sprintf(
                     'Tenant [%s] cannot be provisioned from status [%s].',
@@ -70,23 +69,41 @@ final class TenantProvisioningService
         }
     }
 
-    private function markProvisioning(Tenant $tenant): void
+    private function claimProvisioning(Tenant $tenant): bool
     {
+        $expectedVersion = $tenant->row_version;
+
         $tenant->status = TenantStatus::PROVISIONING;
         $tenant->provisioning_started_at = now();
-        $tenant->save();
+
+        /*
+         * HasOptimisticLock adds:
+         *
+         * WHERE row_version = expectedVersion
+         *
+         * and increments row_version.
+         */
+        try {
+            $tenant->save();
+
+            return true;
+        } catch (OptimisticLockException) {
+            return false;
+        }
     }
 
     private function markActive(Tenant $tenant): void
     {
         $tenant->status = TenantStatus::ACTIVE;
         $tenant->provisioned_at = now();
+
         $tenant->save();
     }
 
     private function markProvisioningFailed(Tenant $tenant): void
     {
         $tenant->status = TenantStatus::PROVISIONING_FAILED;
+
         $tenant->save();
     }
 }

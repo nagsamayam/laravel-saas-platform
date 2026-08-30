@@ -159,3 +159,48 @@ it('marks tenant as provisioning failed when migration fails', function (): void
     expect($tenant->fresh()->status)
         ->toBe(TenantStatus::PROVISIONING_FAILED);
 });
+
+it('prevents a stale tenant instance from claiming provisioning', function (): void {
+    $tenant = provisioningTenant(
+        'concurrent',
+        TenantStatus::APPROVED,
+    );
+
+    $first = Tenant::query()->findOrFail(
+        $tenant->id
+    );
+
+    $second = Tenant::query()->findOrFail(
+        $tenant->id
+    );
+
+    $migrationRunner = Mockery::mock(
+        TenantMigrationRunnerContract::class
+    );
+
+    $migrationRunner
+        ->shouldReceive('run')
+        ->once()
+        ->with($tenant->schema_name);
+
+    app()->instance(
+        TenantMigrationRunnerContract::class,
+        $migrationRunner,
+    );
+
+    $service = app(
+        TenantProvisioningService::class
+    );
+
+    $service->provision($first);
+
+    expect($first->fresh()->status)
+        ->toBe(TenantStatus::ACTIVE);
+
+    $second->status = TenantStatus::APPROVED;
+
+    $result = $service->provision($second);
+
+    expect($result->status)
+        ->toBe(TenantStatus::ACTIVE);
+});

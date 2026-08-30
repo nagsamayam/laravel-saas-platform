@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Console\Commands;
 
 use Illuminate\Console\Attributes\Description;
@@ -11,16 +13,11 @@ use Illuminate\Support\Facades\Artisan;
 #[Description('Run platform database migrations')]
 class PlatformMigrate extends Command
 {
-    /**
-     * Execute the console command.
-     */
     public function handle(): int
     {
         $path = database_path('migrations/platform');
 
-        $command = $this->option('fresh')
-            ? 'migrate:fresh'
-            : 'migrate';
+        $command = $this->option('fresh') ? 'migrate:fresh' : 'migrate';
 
         $exitCode = Artisan::call($command, [
             '--path' => $path,
@@ -28,9 +25,7 @@ class PlatformMigrate extends Command
             '--force' => true,
         ]);
 
-        $this->output->write(
-            Artisan::output()
-        );
+        $this->output->write(Artisan::output());
 
         if ($exitCode !== self::SUCCESS) {
             return $exitCode;
@@ -41,9 +36,7 @@ class PlatformMigrate extends Command
                 '--force' => true,
             ]);
 
-            $this->output->write(
-                Artisan::output()
-            );
+            $this->output->write(Artisan::output());
 
             return $exitCode;
         }
