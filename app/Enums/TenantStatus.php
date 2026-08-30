@@ -17,4 +17,17 @@ enum TenantStatus: string
     case PROVISIONING_FAILED = 'provisioning_failed';
 
     case SUSPENDED = 'suspended';
+
+    public function isProvisionable(): bool
+    {
+        return in_array($this, [
+            self::APPROVED,
+            self::PROVISIONING_FAILED,
+        ], true);
+    }
+
+    public function isActive(): bool
+    {
+        return $this === self::ACTIVE;
+    }
 }

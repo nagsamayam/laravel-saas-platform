@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
-final class TenantMigrationRunner
+final class TenantMigrationRunner implements TenantMigrationRunnerContract
 {
     private const CONNECTION = 'pgsql';
 

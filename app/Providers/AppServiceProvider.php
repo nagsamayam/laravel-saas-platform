@@ -6,6 +6,8 @@ namespace App\Providers;
 
 use App\Support\Tenancy\TenantContext;
 use App\Support\Tenancy\TenantDatabaseManager;
+use App\Support\Tenancy\TenantMigrationRunner;
+use App\Support\Tenancy\TenantMigrationRunnerContract;
 use App\Support\Tenancy\TenantResolver;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,6 +28,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             TenantResolver::class,
             static fn (): TenantResolver => new TenantResolver
+        );
+
+        $this->app->bind(
+            TenantMigrationRunnerContract::class,
+            TenantMigrationRunner::class
         );
     }
 
