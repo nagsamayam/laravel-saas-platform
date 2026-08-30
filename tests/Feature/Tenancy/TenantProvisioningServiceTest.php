@@ -204,3 +204,26 @@ it('prevents a stale tenant instance from claiming provisioning', function (): v
     expect($result->status)
         ->toBe(TenantStatus::ACTIVE);
 });
+
+it('recovers a failed tenant through a subsequent provisioning attempt', function (): void {
+    $tenant = provisioningTenant(
+        'recovery',
+        TenantStatus::PROVISIONING_FAILED,
+    );
+
+    $service = app(TenantProvisioningService::class);
+
+    $result = $service->provision($tenant);
+
+    expect($result->status)
+        ->toBe(TenantStatus::ACTIVE);
+
+    expect($result->provisioning_started_at)
+        ->not->toBeNull();
+
+    expect($result->provisioned_at)
+        ->not->toBeNull();
+
+    app(TenantMigrationRunner::class)
+        ->dropSchema($tenant->schema_name);
+});

@@ -13,20 +13,27 @@ return new class extends Migration
         Schema::create('projects', function (Blueprint $table): void {
             $table->uuid('id')->primary();
 
-            $table->string('name', 150);
-            $table->text('description')->nullable();
-            $table->string('status', 30)->index();
+            $table->string('name');
+            $table->string('slug');
 
-            $table->unsignedBigInteger('row_version')->default(1);
+            $table->unsignedBigInteger('row_version')
+                ->default(1);
 
-            $table->uuid('created_by')->nullable();
-            $table->timestampTz('created_at');
+            $table->uuid('created_by')
+                ->nullable();
 
-            $table->uuid('updated_by')->nullable();
-            $table->timestampTz('updated_at');
+            $table->uuid('updated_by')
+                ->nullable();
 
-            $table->uuid('deleted_by')->nullable();
-            $table->timestampTz('deleted_at')->nullable();
+            $table->uuid('deleted_by')
+                ->nullable();
+
+            $table->timestampsTz();
+
+            $table->timestampTz('deleted_at')
+                ->nullable();
+
+            $table->unique('slug');
 
             $table->index('deleted_at');
         });

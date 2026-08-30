@@ -160,3 +160,25 @@ it('allows a platform administrator to access an active tenant', function (): vo
     expect($resolved->id)
         ->toBe($tenant->id);
 });
+
+it('prevents a tenant user from resolving another tenant', function (): void {
+    $user = resolverUser(
+        'tenant-a@example.com',
+    );
+
+    $tenantA = resolverTenant('tenant-a');
+    $tenantB = resolverTenant('tenant-b');
+
+    TenantUser::query()->create([
+        'tenant_id' => $tenantA->id,
+        'user_id' => $user->id,
+        'status' => TenantMembershipStatus::ACTIVE,
+    ]);
+
+    $this->actingAs($user);
+
+    app(TenantResolver::class)
+        ->resolve(
+            resolverRequest($tenantB->id)
+        );
+})->throws(AccessDeniedHttpException::class);
