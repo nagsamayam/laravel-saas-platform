@@ -2,42 +2,30 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Platform;
-
 use App\Enums\TenantStatus;
 use App\Models\Platform\Tenant;
 use App\Support\Concurrency\OptimisticLockException;
-use Tests\TestCase;
 
-class OptimisticConcurrencyTest extends TestCase
-{
-    public function test_concurrent_update_is_rejected(): void
-    {
-        $tenant = Tenant::query()->create([
-            'name' => 'Acme',
-            'slug' => 'acme',
-            'status' => TenantStatus::PENDING,
-            'schema_name' => 'tenant_acme',
-        ]);
+test('concurrent update is rejected', function () {
+    $tenant = Tenant::query()->create([
+        'name' => 'Acme',
+        'slug' => 'acme',
+        'status' => TenantStatus::PENDING,
+        'schema_name' => 'tenant_acme',
+    ]);
 
-        $first = Tenant::query()->findOrFail($tenant->id);
-        $second = Tenant::query()->findOrFail($tenant->id);
+    $first = Tenant::query()->findOrFail($tenant->id);
+    $second = Tenant::query()->findOrFail($tenant->id);
 
-        $this->assertSame(1, $first->row_version);
-        $this->assertSame(1, $second->row_version);
+    expect($first->row_version)->toBe(1)
+        ->and($second->row_version)->toBe(1);
 
-        $first->name = 'Acme Corporation';
-        $first->save();
+    $first->name = 'Acme Corporation';
+    $first->save();
 
-        $this->assertSame(
-            2,
-            $first->fresh()->row_version
-        );
+    expect($first->fresh()->row_version)->toBe(2);
 
-        $second->name = 'Acme Limited';
+    $second->name = 'Acme Limited';
 
-        $this->expectException(OptimisticLockException::class);
-
-        $second->save();
-    }
-}
+    $second->save();
+})->throws(OptimisticLockException::class);

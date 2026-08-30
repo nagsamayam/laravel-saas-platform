@@ -2,19 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature;
+use function Pest\Laravel\getJson;
 
-use Tests\TestCase;
-
-class HealthCheckTest extends TestCase
-{
-    public function test_health_endpoint_is_reachable(): void
-    {
-        $response = $this->getJson('/api/health');
-
-        $response->assertSuccessful();
-
-        $response->assertJsonStructure([
+test('health endpoint is reachable', function () {
+    getJson('/api/health')
+        ->assertSuccessful()
+        ->assertJsonStructure([
             'status',
             'service',
             'timestamp',
@@ -29,8 +22,6 @@ class HealthCheckTest extends TestCase
                     'status',
                 ],
             ],
-        ]);
-
-        $response->assertJsonPath('status', 'ok');
-    }
-}
+        ])
+        ->assertJsonPath('status', 'ok');
+});

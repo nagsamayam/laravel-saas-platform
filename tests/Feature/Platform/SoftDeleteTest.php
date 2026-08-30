@@ -2,35 +2,25 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Platform;
-
 use App\Enums\TenantStatus;
 use App\Models\Platform\Tenant;
-use Tests\TestCase;
 
-class SoftDeleteTest extends TestCase
-{
-    public function test_tenant_is_soft_deleted(): void
-    {
-        $tenant = Tenant::query()->create([
-            'name' => 'Acme',
-            'slug' => 'acme',
-            'status' => TenantStatus::PENDING,
-            'schema_name' => 'tenant_acme',
-        ]);
+use function Pest\Laravel\assertSoftDeleted;
 
-        $tenant->delete();
+test('tenant is soft deleted', function () {
+    $tenant = Tenant::query()->create([
+        'name' => 'Acme',
+        'slug' => 'acme',
+        'status' => TenantStatus::PENDING,
+        'schema_name' => 'tenant_acme',
+    ]);
 
-        $this->assertSoftDeleted('tenants', [
-            'id' => $tenant->id,
-        ]);
+    $tenant->delete();
 
-        $this->assertNull(
-            Tenant::query()->find($tenant->id)
-        );
+    assertSoftDeleted('tenants', [
+        'id' => $tenant->id,
+    ]);
 
-        $this->assertNotNull(
-            Tenant::withTrashed()->find($tenant->id)
-        );
-    }
-}
+    expect(Tenant::query()->find($tenant->id))->toBeNull()
+        ->and(Tenant::withTrashed()->find($tenant->id))->not->toBeNull();
+});
