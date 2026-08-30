@@ -12,31 +12,35 @@ return new class extends Migration
     {
         Schema::table('tenants', function (Blueprint $table): void {
             $table->unsignedBigInteger('row_version')
-                ->default(1)
-                ->after('schema_name');
+                ->default(1);
 
             $table->uuid('created_by')
-                ->nullable()
-                ->after('created_at');
+                ->nullable();
 
             $table->uuid('updated_by')
-                ->nullable()
-                ->after('updated_at');
+                ->nullable();
 
             $table->uuid('deleted_by')
-                ->nullable()
-                ->after('deleted_at');
+                ->nullable();
+
+            $table->timestampTz('deleted_at')
+                ->nullable();
+
+            $table->index('deleted_at');
         });
     }
 
     public function down(): void
     {
         Schema::table('tenants', function (Blueprint $table): void {
+            $table->dropIndex('tenants_deleted_at_index');
+
             $table->dropColumn([
                 'row_version',
                 'created_by',
                 'updated_by',
                 'deleted_by',
+                'deleted_at',
             ]);
         });
     }

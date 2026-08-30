@@ -10,7 +10,7 @@ trait HasOptimisticLock
 {
     public function getRowVersion(): int
     {
-        return (int) $this->getAttribute('row_version');
+        return (int) ($this->getAttribute('row_version') ?? 1);
     }
 
     public function incrementRowVersion(): void
@@ -21,9 +21,8 @@ trait HasOptimisticLock
         );
     }
 
-    protected function performUpdate(
-        Builder $query
-    ): bool {
+    protected function performUpdate(Builder $query): bool
+    {
         if ($this->fireModelEvent('updating') === false) {
             return false;
         }
@@ -32,40 +31,46 @@ trait HasOptimisticLock
             $this->updateTimestamps();
         }
 
-        $dirty = $this->getDirtyForUpdate();
+        $expectedVersion = (int) (
+            $this->getRawOriginal('row_version') ?? 1
+        );
 
-        if (! $this->isDirty('row_version')) {
-            $this->incrementRowVersion();
-            $dirty = $this->getDirtyForUpdate();
-        }
+        $this->setAttribute(
+            'row_version',
+            $expectedVersion + 1
+        );
+
+        $dirty = $this->getDirtyForUpdate();
 
         if ($dirty === []) {
             return true;
         }
 
-        $expectedVersion = $this->getOriginal('row_version');
-
-        $query->where(
-            $this->getKeyName(),
-            $this->getKey()
-        )->where(
-            'row_version',
-            $expectedVersion
-        );
-
-        $dirty['row_version'] = $this->getRowVersion();
-
-        $updated = $query->update($dirty);
+        $updated = $query
+            ->where(
+                $this->getKeyName(),
+                $this->getKey()
+            )
+            ->where(
+                'row_version',
+                $expectedVersion
+            )
+            ->update($dirty);
 
         if ($updated === 0) {
             throw new OptimisticLockException(
                 static::class,
                 (string) $this->getKey(),
-                (int) $expectedVersion
+                $expectedVersion
             );
         }
 
         $this->syncChanges();
+
+        $this->syncOriginalAttribute(
+            'row_version',
+            $this->getAttribute('row_version')
+        );
 
         $this->fireModelEvent('updated', false);
 
