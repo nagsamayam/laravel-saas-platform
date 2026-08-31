@@ -71,25 +71,17 @@ final class TenantProvisioningService
 
     private function claimProvisioning(Tenant $tenant): bool
     {
-        $expectedVersion = $tenant->row_version;
-
         $tenant->status = TenantStatus::PROVISIONING;
         $tenant->provisioning_started_at = now();
 
-        /*
-         * HasOptimisticLock adds:
-         *
-         * WHERE row_version = expectedVersion
-         *
-         * and increments row_version.
-         */
         try {
             $tenant->save();
 
             return true;
-        } catch (OptimisticLockException) {
-            return false;
-        }
+        } catch (
+            OptimisticLockException) {
+                return false;
+            }
     }
 
     private function markActive(Tenant $tenant): void
@@ -103,7 +95,6 @@ final class TenantProvisioningService
     private function markProvisioningFailed(Tenant $tenant): void
     {
         $tenant->status = TenantStatus::PROVISIONING_FAILED;
-
         $tenant->save();
     }
 }

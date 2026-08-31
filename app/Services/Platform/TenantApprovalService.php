@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Services\Platform;
 
 use App\Enums\TenantStatus;
+use App\Exceptions\ApplicationException;
 use App\Jobs\Tenancy\ProvisionTenant;
 use App\Models\Platform\Tenant;
 use App\Models\Platform\User;
 use Illuminate\Support\Facades\DB;
-use RuntimeException;
 
 final class TenantApprovalService
 {
@@ -25,12 +25,13 @@ final class TenantApprovalService
         }
 
         if ($tenant->status !== TenantStatus::PENDING) {
-            throw new RuntimeException(
+            throw new ApplicationException(
                 sprintf(
                     'Tenant [%s] cannot be approved from status [%s].',
                     $tenant->id,
                     $tenant->status->value,
-                )
+                ),
+                422,
             );
         }
 
@@ -44,10 +45,8 @@ final class TenantApprovalService
 
                 $tenant->save();
 
-                $tenantId = (string) $tenant->id;
-
                 ProvisionTenant::dispatch(
-                    $tenantId
+                    (string) $tenant->id
                 )->afterCommit();
 
                 return $tenant->fresh();

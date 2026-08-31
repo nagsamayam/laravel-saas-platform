@@ -176,3 +176,27 @@ it('returns not found for an unknown tenant', function (): void {
         )
         ->assertNotFound();
 });
+
+it('returns a consistent error for an invalid tenant state', function (): void {
+    $user = approvalApiUser(
+        'invalid-state@example.com',
+    );
+
+    $tenant = approvalApiTenant(
+        'invalid-state',
+    );
+
+    $tenant->update([
+        'status' => TenantStatus::SUSPENDED,
+    ]);
+
+    $this
+        ->actingAs($user)
+        ->postJson(
+            "/api/v1/platform/tenants/{$tenant->id}/approve"
+        )
+        ->assertUnprocessable()
+        ->assertJson([
+            'message' => "Tenant [{$tenant->id}] cannot be approved from status [suspended].",
+        ]);
+});
