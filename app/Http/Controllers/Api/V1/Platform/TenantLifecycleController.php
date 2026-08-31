@@ -18,6 +18,7 @@ final class TenantLifecycleController extends Controller
             'viewAny',
             Tenant::class,
         );
+
         $tenants = Tenant::query()
             ->orderByDesc('created_at')
             ->paginate(25);

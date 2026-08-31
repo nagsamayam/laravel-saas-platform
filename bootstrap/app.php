@@ -2,6 +2,7 @@
 
 use App\Exceptions\ApplicationException;
 use App\Http\Middleware\RequirePlatformAdmin;
+use App\Http\Middleware\RequireTenantMembership;
 use App\Http\Middleware\ResolveTenant;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -21,6 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenant' => ResolveTenant::class,
             'platform.admin' => RequirePlatformAdmin::class,
+            'tenant.member' => RequireTenantMembership::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
