@@ -55,7 +55,7 @@ it('approves a pending tenant through the api', function (): void {
     $tenant = approvalApiTenant();
 
     $response = $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson(
             "/api/v1/platform/tenants/{$tenant->id}/approve"
         );
@@ -89,7 +89,7 @@ it('records the approving administrator', function (): void {
     );
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson(
             "/api/v1/platform/tenants/{$tenant->id}/approve"
         )
@@ -111,7 +111,7 @@ it('is idempotent when approving an already approved tenant', function (): void 
     ]);
 
     $response = $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson(
             "/api/v1/platform/tenants/{$tenant->id}/approve"
         );
@@ -137,7 +137,7 @@ it('does not allow a normal authenticated user to approve a tenant', function ()
     );
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson(
             "/api/v1/platform/tenants/{$tenant->id}/approve"
         )
@@ -170,7 +170,7 @@ it('returns not found for an unknown tenant', function (): void {
     $id = '00000000-0000-4000-8000-000000000001';
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson(
             "/api/v1/platform/tenants/{$id}/approve"
         )
@@ -191,7 +191,7 @@ it('returns a consistent error for an invalid tenant state', function (): void {
     ]);
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson(
             "/api/v1/platform/tenants/{$tenant->id}/approve"
         )

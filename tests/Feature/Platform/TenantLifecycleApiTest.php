@@ -54,7 +54,7 @@ it('lists tenants for a platform administrator', function (): void {
     lifecycleApiTenant('tenant-two');
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->getJson('/api/v1/platform/tenants')
         ->assertOk()
         ->assertJsonCount(2, 'data')
@@ -85,7 +85,7 @@ it('returns a single tenant', function (): void {
     );
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->getJson(
             "/api/v1/platform/tenants/{$tenant->id}"
         )
@@ -116,7 +116,7 @@ it('does not expose the tenant schema name', function (): void {
     );
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->getJson(
             "/api/v1/platform/tenants/{$tenant->id}"
         )
@@ -132,7 +132,7 @@ it('returns not found for an unknown tenant', function (): void {
     $id = '00000000-0000-4000-8000-000000000001';
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->getJson(
             "/api/v1/platform/tenants/{$id}"
         )
@@ -148,7 +148,7 @@ it('does not allow a normal user to list tenants', function (): void {
     ]);
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->getJson('/api/v1/platform/tenants')
         ->assertForbidden();
 });

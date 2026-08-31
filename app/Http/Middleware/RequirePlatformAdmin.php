@@ -16,7 +16,7 @@ final class RequirePlatformAdmin
         Request $request,
         Closure $next,
     ): Response {
-        $user = $request->user();
+        $user = $request->user('api');
 
         if (! $user instanceof User) {
             throw new AccessDeniedHttpException(

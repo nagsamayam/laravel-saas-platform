@@ -39,7 +39,7 @@ Route::prefix('v1')
                     });
             });
         Route::prefix('platform')
-            ->middleware(['auth', 'platform.admin'])
+            ->middleware(['auth:api', 'platform.admin'])
             ->group(function (): void {
                 Route::post(
                     'tenants',

@@ -51,7 +51,7 @@ it('creates a pending tenant', function (): void {
     $user = onboardingUser();
 
     $response = $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson('/api/v1/platform/tenants', [
             'name' => 'Acme Corporation',
             'slug' => 'acme-corporation',
@@ -82,7 +82,7 @@ it('generates the tenant schema automatically', function (): void {
     $user = onboardingUser();
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson('/api/v1/platform/tenants', [
             'name' => 'Acme Corporation',
             'slug' => 'acme-corporation',
@@ -101,7 +101,7 @@ it('does not allow status to be supplied by the client', function (): void {
     $user = onboardingUser();
 
     $response = $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson('/api/v1/platform/tenants', [
             'name' => 'Acme Corporation',
             'slug' => 'acme-status-test',
@@ -120,7 +120,7 @@ it('does not expose the tenant schema name', function (): void {
     $user = onboardingUser();
 
     $response = $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson('/api/v1/platform/tenants', [
             'name' => 'Acme Corporation',
             'slug' => 'acme-hidden-schema',
@@ -137,7 +137,7 @@ it('requires a tenant name', function (): void {
     $user = onboardingUser();
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson('/api/v1/platform/tenants', [
             'slug' => 'missing-name',
         ])
@@ -151,7 +151,7 @@ it('requires a valid tenant slug', function (): void {
     $user = onboardingUser();
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson('/api/v1/platform/tenants', [
             'name' => 'Acme',
             'slug' => 'Invalid Slug!',
@@ -172,7 +172,7 @@ it('does not allow duplicate tenant slugs', function (): void {
     ]);
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson('/api/v1/platform/tenants', [
             'name' => 'Another Tenant',
             'slug' => 'existing-tenant',
@@ -187,7 +187,7 @@ it('allows a platform administrator to create a tenant', function (): void {
     $user = onboardingUser();
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson('/api/v1/platform/tenants', [
             'name' => 'Platform Tenant',
             'slug' => 'platform-tenant',
@@ -203,7 +203,7 @@ it('rejects an authenticated non-platform-admin user', function (): void {
     $user = nonPlatformUser();
 
     $this
-        ->actingAs($user)
+        ->withToken(loginAsUser($user))
         ->postJson('/api/v1/platform/tenants', [
             'name' => 'Unauthorized Tenant',
             'slug' => 'unauthorized-tenant',

@@ -117,7 +117,7 @@ it('does not allow a normal user to approve a tenant', function (): void {
     );
 
     $this
-        ->actingAs($normalUser)
+        ->withToken(loginAsUser($normalUser))
         ->postJson(
             "/api/v1/platform/tenants/{$tenant->id}/approve"
         )
@@ -139,7 +139,7 @@ it('does not expose tenant schema through the lifecycle api', function (): void 
     );
 
     $this
-        ->actingAs($admin)
+        ->withToken(loginAsUser($admin))
         ->getJson(
             "/api/v1/platform/tenants/{$tenant->id}"
         )
