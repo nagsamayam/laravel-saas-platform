@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Models\Platform\User;
 
 return [
 
@@ -40,6 +40,11 @@ return [
     'guards' => [
         'web' => [
             'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        'api' => [
+            'driver' => 'jwt',
             'provider' => 'users',
         ],
     ],

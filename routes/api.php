@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\Platform\TenantApprovalController;
 use App\Http\Controllers\Api\V1\Platform\TenantController;
 use App\Http\Controllers\Api\V1\Platform\TenantLifecycleController;
@@ -13,6 +14,26 @@ Route::get('/health', HealthController::class)
 
 Route::prefix('v1')
     ->group(function (): void {
+        Route::prefix('auth')
+            ->group(function (): void {
+                Route::post(
+                    'login',
+                    [AuthController::class, 'login']
+                );
+
+                Route::middleware('auth:api')
+                    ->group(function (): void {
+                        Route::get(
+                            'me',
+                            [AuthController::class, 'me']
+                        );
+
+                        Route::post(
+                            'logout',
+                            [AuthController::class, 'logout']
+                        );
+                    });
+            });
         Route::prefix('platform')
             ->middleware(['auth', 'platform.admin'])
             ->group(function (): void {
