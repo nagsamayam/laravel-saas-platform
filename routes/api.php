@@ -23,6 +23,10 @@ Route::prefix('v1')
 
                 Route::middleware('auth:api')
                     ->group(function (): void {
+                        Route::post(
+                            'refresh',
+                            [AuthController::class, 'refresh']
+                        );
                         Route::get(
                             'me',
                             [AuthController::class, 'me']
