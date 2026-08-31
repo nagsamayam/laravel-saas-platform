@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 use App\Enums\TenantStatus;
 use App\Enums\UserStatus;
+use App\Jobs\Tenancy\ProvisionTenant;
 use App\Models\Platform\Tenant;
 use App\Models\Platform\User;
 use App\Services\Platform\TenantApprovalService;
 use App\Support\Concurrency\OptimisticLockException;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Queue;
 use RuntimeException;
 
 function approvalUser(
@@ -34,6 +36,8 @@ function approvalTenant(
 }
 
 it('approves a pending tenant', function (): void {
+    Queue::fake();
+
     $tenant = approvalTenant();
     $user = approvalUser();
 
@@ -45,6 +49,10 @@ it('approves a pending tenant', function (): void {
 
     expect($result->updated_by)
         ->toBe($user->id);
+
+    Queue::assertPushed(
+        ProvisionTenant::class,
+    );
 });
 
 it('is idempotent when the tenant is already approved', function (): void {
@@ -128,6 +136,8 @@ it('rejects a provisioning failed tenant', function (): void {
 })->throws(RuntimeException::class);
 
 it('protects approval from stale concurrent updates', function (): void {
+    Queue::fake();
+
     $tenant = approvalTenant(
         'concurrent-approval',
     );
@@ -163,5 +173,75 @@ it('protects approval from stale concurrent updates', function (): void {
         $secondApprover,
     ))->toThrow(
         OptimisticLockException::class
+    );
+
+    Queue::assertPushed(
+        ProvisionTenant::class,
+        1,
+    );
+});
+
+it('dispatches tenant provisioning after approval', function (): void {
+    Queue::fake();
+
+    $tenant = approvalTenant(
+        'dispatch-approval',
+    );
+
+    $user = approvalUser(
+        'dispatch-approver@example.com',
+    );
+
+    $result = app(TenantApprovalService::class)
+        ->approve($tenant, $user);
+
+    expect($result->status)
+        ->toBe(TenantStatus::APPROVED);
+
+    Queue::assertPushed(
+        ProvisionTenant::class,
+        function (ProvisionTenant $job) use ($tenant): bool {
+            return $job->tenantId === $tenant->id;
+        },
+    );
+});
+
+it('does not dispatch provisioning for an already approved tenant', function (): void {
+    Queue::fake();
+
+    $tenant = approvalTenant(
+        'already-approved-dispatch',
+        TenantStatus::APPROVED,
+    );
+
+    $user = approvalUser(
+        'already-approved-dispatcher@example.com',
+    );
+
+    app(TenantApprovalService::class)
+        ->approve($tenant, $user);
+
+    Queue::assertNotPushed(
+        ProvisionTenant::class,
+    );
+});
+
+it('does not dispatch provisioning for an active tenant', function (): void {
+    Queue::fake();
+
+    $tenant = approvalTenant(
+        'active-no-dispatch',
+        TenantStatus::ACTIVE,
+    );
+
+    $user = approvalUser(
+        'active-no-dispatcher@example.com',
+    );
+
+    app(TenantApprovalService::class)
+        ->approve($tenant, $user);
+
+    Queue::assertNotPushed(
+        ProvisionTenant::class,
     );
 });

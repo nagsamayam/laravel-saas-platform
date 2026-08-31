@@ -5,10 +5,12 @@ declare(strict_types=1);
 use App\Enums\RoleType;
 use App\Enums\TenantStatus;
 use App\Enums\UserStatus;
+use App\Jobs\Tenancy\ProvisionTenant;
 use App\Models\Platform\Role;
 use App\Models\Platform\Tenant;
 use App\Models\Platform\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Queue;
 
 function approvalApiUser(
     string $email = 'approval-api@example.com',
@@ -47,6 +49,8 @@ function approvalApiTenant(
 }
 
 it('approves a pending tenant through the api', function (): void {
+    Queue::fake();
+
     $user = approvalApiUser();
     $tenant = approvalApiTenant();
 
@@ -69,6 +73,10 @@ it('approves a pending tenant through the api', function (): void {
 
     expect($tenant->fresh()->status)
         ->toBe(TenantStatus::APPROVED);
+
+    Queue::assertPushed(
+        ProvisionTenant::class,
+    );
 });
 
 it('records the approving administrator', function (): void {
