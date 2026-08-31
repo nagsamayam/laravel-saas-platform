@@ -12,6 +12,7 @@ Route::get('/health', HealthController::class)
 Route::prefix('v1')
     ->group(function (): void {
         Route::prefix('platform')
+            ->middleware(['auth', 'platform.admin'])
             ->group(function (): void {
                 Route::post(
                     'tenants',

@@ -87,4 +87,12 @@ class User extends Authenticatable
     {
         return $this->status === UserStatus::ACTIVE;
     }
+
+    public function isPlatformAdmin(): bool
+    {
+        return $this->platformRoles()
+            ->where('slug', 'platform_admin')
+            ->where('type', 'platform')
+            ->exists();
+    }
 }

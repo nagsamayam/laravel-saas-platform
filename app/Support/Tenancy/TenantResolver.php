@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Support\Tenancy;
 
-use App\Enums\RoleType;
 use App\Enums\TenantMembershipStatus;
 use App\Enums\TenantStatus;
 use App\Models\Platform\Tenant;
@@ -45,7 +44,7 @@ final class TenantResolver
             );
         }
 
-        if ($this->isPlatformAdmin($user)) {
+        if ($user->isPlatformAdmin()) {
             return $tenant;
         }
 
@@ -76,14 +75,6 @@ final class TenantResolver
         }
 
         return $tenantId;
-    }
-
-    private function isPlatformAdmin(User $user): bool
-    {
-        return $user->platformRoles()
-            ->where('slug', 'platform_admin')
-            ->where('type', RoleType::PLATFORM->value)
-            ->exists();
     }
 
     private function ensureTenantMembership(
