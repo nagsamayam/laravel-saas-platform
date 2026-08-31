@@ -10,6 +10,7 @@ use App\Models\Platform\Tenant;
 use App\Services\Platform\TenantApprovalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 final class TenantApprovalController extends Controller
 {
@@ -21,9 +22,14 @@ final class TenantApprovalController extends Controller
         Request $request,
         Tenant $tenant,
     ): JsonResponse {
+        Gate::authorize(
+            'approve',
+            $tenant
+        );
+
         $tenant = $this->approvalService->approve(
             tenant: $tenant,
-            approvedBy: $request->user(),
+            approvedBy: $request->user('api'),
         );
 
         return (new TenantResource($tenant))

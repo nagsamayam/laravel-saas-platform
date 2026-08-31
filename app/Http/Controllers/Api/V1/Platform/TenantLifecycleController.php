@@ -8,11 +8,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\Platform\TenantResource;
 use App\Models\Platform\Tenant;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Gate;
 
 final class TenantLifecycleController extends Controller
 {
     public function index(): AnonymousResourceCollection
     {
+        Gate::authorize(
+            'viewAny',
+            Tenant::class,
+        );
         $tenants = Tenant::query()
             ->orderByDesc('created_at')
             ->paginate(25);
@@ -23,6 +28,11 @@ final class TenantLifecycleController extends Controller
     public function show(
         Tenant $tenant,
     ): TenantResource {
+        Gate::authorize(
+            'view',
+            $tenant,
+        );
+
         return new TenantResource($tenant);
     }
 }
