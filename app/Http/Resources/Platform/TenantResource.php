@@ -16,6 +16,8 @@ final class TenantResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'status' => $this->status->value,
+            'created_by' => $this->created_by,
+            'updated_by' => $this->updated_by,
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

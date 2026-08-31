@@ -24,7 +24,7 @@ final class RequirePlatformAdmin
             );
         }
 
-        if (! $user->isPlatformAdmin()) {
+        if (! $user->canManagePlatform()) {
             throw new AccessDeniedHttpException(
                 'Platform administrator access is required.'
             );

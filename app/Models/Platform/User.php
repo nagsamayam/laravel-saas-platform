@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models\Platform;
 
+use App\Enums\RoleType;
 use App\Enums\UserStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -92,7 +93,12 @@ class User extends Authenticatable
     {
         return $this->platformRoles()
             ->where('slug', 'platform_admin')
-            ->where('type', 'platform')
+            ->where('type', RoleType::PLATFORM)
             ->exists();
+    }
+
+    public function canManagePlatform(): bool
+    {
+        return $this->isPlatformAdmin();
     }
 }

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Models\Platform\Tenant;
+use App\Policies\TenantPolicy;
 use App\Support\Tenancy\TenantContext;
 use App\Support\Tenancy\TenantDatabaseManager;
 use App\Support\Tenancy\TenantMigrationRunner;
 use App\Support\Tenancy\TenantMigrationRunnerContract;
 use App\Support\Tenancy\TenantResolver;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -38,6 +41,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        Gate::policy(
+            Tenant::class,
+            TenantPolicy::class,
+        );
     }
 }
